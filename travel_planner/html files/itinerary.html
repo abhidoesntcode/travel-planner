@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI - Itinerary Co-pilot</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+    <style>
+         :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --card-bg: rgba(255, 255, 255, 0.7);
+        }
+        
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.5);
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.12) 0%, transparent 40%);
+            z-index: 1;
+        }
+        
+        .iphone-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid var(--glass-border);
+            position: relative;
+            z-index: 10;
+        }
+        
+        .timeline-card {
+            background: var(--card-bg);
+            border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            transition: transform 0.3s ease;
+        }
+        
+        .timeline-card:hover {
+            transform: translateX(5px);
+        }
+        
+        .custom-scroll::-webkit-scrollbar {
+            width: 4px;
+        }
+        
+        .custom-scroll::-webkit-scrollbar-thumb {
+            background: rgba(56, 189, 248, 0.2);
+            border-radius: 10px;
+        }
+    </style>
+</head>
+
+<body onmousemove="updateSpotlight(event)" class="flex flex-col">
+    <div id="spotlight"></div>
+    <nav class="w-full z-[100] px-6 py-4">
+        <div class="max-w-[1600px] mx-auto flex justify-between items-center iphone-glass px-6 py-3 rounded-[24px] shadow-sm">
+            <a href="index.html" class="flex items-center gap-3 text-2xl font-black">
+                <i class="fa-solid fa-mountain-sun text-sky-400"></i>
+                <span>Wander<span class="text-sky-400">AI</span></span>
+            </a>
+            <div class="flex gap-6 items-center">
+                <button onclick="toggleTheme()" class="w-10 h-10 iphone-glass rounded-xl flex items-center justify-center text-inherit"><i id="themeIcon" class="fa-solid fa-moon"></i></button>
+                <a href="index.html" class="text-xs font-bold opacity-60 hover:opacity-100">Home</a>
+            </div>
+        </div>
+    </nav>
+    <main class="flex flex-1 overflow-hidden px-6 pb-6 gap-6 relative z-10">
+        <section class="flex-[1.5] iphone-glass rounded-[40px] flex flex-col overflow-hidden">
+            <div class="p-8 border-b border-white/10 bg-white/5">
+                <h2 id="displayTitle" class="text-4xl font-black tracking-tight uppercase">Loading Itinerary...</h2>
+                <p id="displayStats" class="text-slate-500 font-bold text-sm">-- Days • ₹0 Total</p>
+            </div>
+            <div class="flex-1 overflow-y-auto p-10 custom-scroll">
+                <div id="itineraryContainer" class="space-y-12 border-l-2 border-sky-400/20 ml-4">
+                </div>
+            </div>
+        </section>
+        <section class="flex-1 iphone-glass rounded-[40px] flex flex-col overflow-hidden border-2 border-sky-400/20">
+            <div class="p-6 border-b border-white/10 flex items-center gap-3 bg-white/5">
+                <div class="w-10 h-10 rounded-xl bg-slate-900 flex items-center justify-center text-sky-400"><i class="fa-solid fa-wand-magic-sparkles"></i></div>
+                <div>
+                    <h3 class="font-black text-sm">Itinerary Assistant</h3>
+                    <p class="text-[10px] text-emerald-500 font-bold uppercase">Active</p>
+                </div>
+            </div>
+            <div class="flex-1 overflow-y-auto p-6 space-y-4 custom-scroll" id="chatContainer">
+                <div class="bg-white dark:bg-slate-800 p-4 rounded-2xl text-xs font-medium border border-white/10 shadow-sm leading-relaxed">
+                    I've detailed your daily activities. Want to swap a museum for a beach day? Just ask!
+                </div>
+            </div>
+            <div class="p-6 bg-white/5">
+                <div class="relative">
+                    <input type="text" placeholder="Change Day 2 to 'Relaxing'..." class="w-full bg-white dark:bg-slate-800 border-none rounded-2xl py-4 pl-5 pr-14 text-xs font-bold shadow-inner outline-none">
+                    <button class="absolute right-2 top-2 w-10 h-10 bg-sky-500 text-white rounded-xl flex items-center justify-center shadow-lg shadow-sky-400/30"><i class="fa-solid fa-paper-plane text-xs"></i></button>
+                </div>
+                <p class="text-[9px] text-center opacity-40 mt-4 font-bold uppercase tracking-widest">AI can make mistakes. Verify local prices.</p>
+            </div>
+        </section>
+    </main>
+    <script>
+        function updateSpotlight(e) {
+            document.body.style.setProperty('--x', e.clientX + 'px');
+            document.body.style.setProperty('--y', e.clientY + 'px');
+        }
+        async function loadItinerary() {
+            const id = new URLSearchParams(window.location.search).get('id');
+            if (!id) return;
+            const res = await fetch(`http://localhost:5000/api/trips/${id}`);
+            const trip = (await res.json()).data;
+            document.getElementById('displayTitle').innerText = trip.destination;
+            document.getElementById('displayStats').innerText = `${trip.days} Days • ₹${Number(trip.budget).toLocaleString('en-IN')} Total`;
+            const container = document.getElementById('itineraryContainer');
+            container.innerHTML = '';
+            trip.itineraryData.schedule.forEach((item, i) => {
+                container.insertAdjacentHTML('beforeend', `
+                    <div class="relative pl-8">
+                        <div class="absolute -left-[11px] top-0 w-5 h-5 rounded-full bg-sky-500 border-4 border-white dark:border-slate-900 shadow-sm"></div>
+                        <div class="flex items-center gap-3 mb-4"><span class="text-[10px] font-black text-sky-500 uppercase tracking-widest">Day ${i+1}</span></div>
+                        <div class="timeline-card p-6"><h4 class="font-black text-lg mb-2">${item.activity}</h4><p class="text-xs opacity-60 leading-relaxed font-bold">Curated experience for your ${trip.destination} journey.</p></div>
+                    </div>`);
+            });
+        }
+
+        function toggleTheme() {
+            const target = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            document.getElementById('themeIcon').className = target === 'dark' ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-slate-500';
+        }
+        window.onload = loadItinerary;
+    </script>
+</body>
+
+</html>

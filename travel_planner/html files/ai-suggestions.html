@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI — Curated Suggestions</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        // Apply theme immediately to prevent flashing
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <style>
+         :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass: rgba(255, 255, 255, 0.45);
+            --border: rgba(255, 255, 255, 0.5);
+            --card-bg: rgba(255, 255, 255, 0.6);
+        }
+        
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --card-bg: rgba(30, 41, 59, 0.5);
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.12) 0%, transparent 40%);
+            z-index: 1;
+        }
+        
+        .iphone-glass {
+            background: var(--glass);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+            transition: all 0.4s ease;
+        }
+        
+        .iphone-card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            border-radius: 28px;
+        }
+        
+        .iphone-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+            background: var(--glass);
+        }
+        
+        .iphone-btn {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+        
+        .category-label {
+            font-size: 0.75rem;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--primary);
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+    </style>
+</head>
+
+<body onmousemove="updateSpotlight(event)">
+    <div id="spotlight"></div>
+
+    <nav class="fixed top-0 w-full z-[100] px-6 py-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center iphone-glass px-6 py-3 rounded-[32px] shadow-sm text-inherit">
+            <a href="index.html" class="flex items-center gap-3 text-2xl font-black">
+                <i class="fa-solid fa-mountain-sun text-sky-400"></i>
+                <span>Wander<span class="text-sky-400">AI</span></span>
+            </a>
+
+            <div class="flex items-center gap-3">
+                <button onclick="toggleTheme()" class="w-10 h-10 iphone-btn rounded-xl flex items-center justify-center mr-2">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <a href="itinerary.html" class="iphone-btn px-5 py-2 rounded-2xl text-sm font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-arrow-left text-xs text-sky-400"></i> Back to Itinerary
+                </a>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-44 pb-20 px-6 max-w-5xl mx-auto relative z-10">
+        <div class="iphone-glass p-10 mb-12 rounded-[40px] text-center">
+            <div class="w-16 h-16 bg-sky-400 rounded-2xl flex items-center justify-center text-white text-2xl mx-auto mb-6 shadow-lg shadow-sky-400/20">
+                <i class="fa-solid fa-sparkles"></i>
+            </div>
+            <h2 class="text-4xl font-black tracking-tight mb-3">Curated for You</h2>
+            <p class="text-slate-500 font-bold">Based on your love for photography and spicy food.</p>
+        </div>
+
+        <div class="space-y-12">
+            <div>
+                <span class="category-label"><i class="fa-solid fa-map-pin"></i> Hidden Gems</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="iphone-card p-6 flex gap-5 items-start">
+                        <div class="shrink-0 w-16 h-16 rounded-2xl bg-sky-400/10 flex items-center justify-center text-2xl text-sky-500">
+                            <i class="fa-solid fa-monument"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-lg">Otagi Nenbutsu-ji</h4>
+                            <p class="text-sm text-slate-500 font-medium mt-1 leading-relaxed">A whimsical temple with 1,200 unique stone statues. Far less crowded than Arashiyama.</p>
+                        </div>
+                    </div>
+                    <div class="iphone-card p-6 flex gap-5 items-start">
+                        <div class="shrink-0 w-16 h-16 rounded-2xl bg-sky-400/10 flex items-center justify-center text-2xl text-sky-500">
+                            <i class="fa-solid fa-water"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-lg">Kamo River Evening</h4>
+                            <p class="text-sm text-slate-500 font-medium mt-1 leading-relaxed">Grab a drink and sit by the riverbank like the locals do at sunset.</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <span class="category-label text-amber-500"><i class="fa-solid fa-utensils"></i> Food Recommendations</span>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="iphone-card p-6 flex gap-5 items-start">
+                        <div class="shrink-0 w-16 h-16 rounded-2xl bg-amber-400/10 flex items-center justify-center text-2xl text-amber-500">
+                            <i class="fa-solid fa-bowl-rice"></i>
+                        </div>
+                        <div>
+                            <h4 class="font-black text-lg">Menbaka Fire Ramen</h4>
+                            <p class="text-sm text-slate-500 font-medium mt-1 leading-relaxed">A dramatic dining experience where the chef lights your ramen on fire.</p>
+                        </div>
+                    </div>
+                    <div class="iphone-card p-6 flex items-center justify-center border-dashed border-2 border-slate-400/30 bg-transparent opacity-60">
+                        <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">More coming soon</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function updateSpotlight(e) {
+            document.body.style.setProperty('--x', e.clientX + 'px');
+            document.body.style.setProperty('--y', e.clientY + 'px');
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            updateThemeIcon(target);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-slate-500';
+            }
+        }
+
+        // Initialize theme icon
+        updateThemeIcon(localStorage.getItem('theme') || 'light');
+    </script>
+</body>
+
+</html>

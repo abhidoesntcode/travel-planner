@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI - Saved Trips</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <style>
+         :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass: rgba(255, 255, 255, 0.45);
+            --border: rgba(255, 255, 255, 0.5);
+            --card-inner: #ffffff;
+            --input-bg: rgba(255, 255, 255, 0.8);
+        }
+        
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --card-inner: #1e293b;
+            --input-bg: rgba(30, 41, 59, 0.5);
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.1) 0%, transparent 40%);
+            z-index: 1;
+        }
+        
+        .iphone-glass {
+            background: var(--glass);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid var(--border);
+        }
+        
+        .glass-card {
+            background: var(--glass);
+            backdrop-filter: blur(12px);
+            border: 1px solid var(--border);
+            border-radius: 32px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .glass-card:hover {
+            transform: translateY(-8px) scale(1.02);
+            background: var(--card-inner);
+            box-shadow: 0 20px 40px rgba(56, 189, 248, 0.12);
+        }
+        
+        .inner-content {
+            background: var(--card-inner);
+            transition: background-color 0.4s ease;
+        }
+        
+        .btn-ios {
+            background: rgba(56, 189, 248, 0.1);
+            color: var(--primary);
+            font-weight: 700;
+            border-radius: 16px;
+            transition: all 0.3s ease;
+        }
+        
+        .btn-ios:hover {
+            background: var(--primary);
+            color: white;
+            transform: scale(1.05);
+        }
+        
+        .search-bar {
+            background: var(--input-bg);
+            border: 2px dashed rgba(56, 189, 248, 0.2);
+            border-radius: 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .iphone-btn {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+    </style>
+</head>
+
+<body onmousemove="updateSpotlight(event)">
+    <div id="spotlight"></div>
+
+    <nav class="fixed top-0 w-full z-[100] px-6 py-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center iphone-glass px-6 py-3 rounded-[32px] shadow-sm">
+            <a href="index.html" class="flex items-center gap-3 text-2xl font-black">
+                <i class="fa-solid fa-mountain-sun text-sky-400"></i>
+                <span>Wander<span class="text-sky-400">AI</span></span>
+            </a>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()" class="w-10 h-10 iphone-btn rounded-xl flex items-center justify-center text-inherit">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <div class="hidden md:flex gap-6 items-center">
+                    <a href="index.html" class="text-sm font-bold opacity-60 hover:opacity-100 transition">Home</a>
+                    <a href="saved-trips.html" class="text-sm font-bold text-sky-500">Saved Trips</a>
+                    <a href="profile.html" class="text-sm font-bold opacity-60 hover:opacity-100 transition">Profile</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-40 pb-20 px-6 max-w-6xl mx-auto relative z-10">
+        <div class="flex flex-col md:flex-row justify-between items-end mb-12 gap-6">
+            <div>
+                <h2 class="text-4xl font-black tracking-tight">Trip Library</h2>
+                <p class="opacity-60 font-bold mt-1">Access your AI-generated memories.</p>
+            </div>
+
+            <div class="search-bar p-2 flex items-center gap-3 w-full md:w-96">
+                <i class="fa-solid fa-wand-magic-sparkles text-sky-400 ml-3"></i>
+                <input type="text" placeholder="AI Search: 'Trips in 2025'..." class="bg-transparent border-none focus:ring-0 w-full text-sm font-bold text-inherit placeholder:opacity-40">
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="glass-card overflow-hidden group">
+                <div class="h-40 bg-slate-200 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-sky-500/40 to-transparent z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1493976040374-85c8e12f0c0e?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Kyoto">
+                    <span class="absolute top-4 right-4 z-20 iphone-glass px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">5 Days</span>
+                </div>
+                <div class="p-8 relative z-20 -mt-12">
+                    <div class="inner-content p-6 rounded-[24px] shadow-xl">
+                        <h3 class="text-2xl font-black mb-1">Kyoto, Japan</h3>
+                        <p class="opacity-40 text-[10px] font-black uppercase tracking-widest mb-6">Solo &bull; Culture &bull; Oct 2024</p>
+                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                            <div>
+                                <span class="block text-[10px] font-black opacity-40 uppercase">Budget</span>
+                                <span class="font-black text-sky-500 text-lg">$1,850</span>
+                            </div>
+                            <a href="itinerary.html" class="btn-ios px-5 py-2 text-xs">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card overflow-hidden group">
+                <div class="h-40 bg-slate-200 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-orange-500/40 to-transparent z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1516483638261-f4dbaf036963?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Italy">
+                    <span class="absolute top-4 right-4 z-20 iphone-glass px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">12 Days</span>
+                </div>
+                <div class="p-8 relative z-20 -mt-12">
+                    <div class="inner-content p-6 rounded-[24px] shadow-xl">
+                        <h3 class="text-2xl font-black mb-1">Tuscany, Italy</h3>
+                        <p class="opacity-40 text-[10px] font-black uppercase tracking-widest mb-6">Couple &bull; Foodie &bull; Jun 2025</p>
+                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                            <div>
+                                <span class="block text-[10px] font-black opacity-40 uppercase">Budget</span>
+                                <span class="font-black text-sky-500 text-lg">$4,200</span>
+                            </div>
+                            <a href="#" class="btn-ios px-5 py-2 text-xs">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="glass-card overflow-hidden group">
+                <div class="h-40 bg-slate-200 relative overflow-hidden">
+                    <div class="absolute inset-0 bg-gradient-to-t from-emerald-500/40 to-transparent z-10"></div>
+                    <img src="https://images.unsplash.com/photo-1537996194471-e657df975ab4?auto=format&fit=crop&w=800&q=80" class="w-full h-full object-cover group-hover:scale-110 transition duration-700" alt="Bali">
+                    <span class="absolute top-4 right-4 z-20 iphone-glass px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">7 Days</span>
+                </div>
+                <div class="p-8 relative z-20 -mt-12">
+                    <div class="inner-content p-6 rounded-[24px] shadow-xl">
+                        <h3 class="text-2xl font-black mb-1">Bali, Indonesia</h3>
+                        <p class="opacity-40 text-[10px] font-black uppercase tracking-widest mb-6">Friends &bull; Chill &bull; Dec 2024</p>
+                        <div class="flex justify-between items-center border-t border-white/10 pt-4">
+                            <div>
+                                <span class="block text-[10px] font-black opacity-40 uppercase">Budget</span>
+                                <span class="font-black text-sky-500 text-lg">$1,100</span>
+                            </div>
+                            <a href="#" class="btn-ios px-5 py-2 text-xs">Explore</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        function updateSpotlight(e) {
+            document.body.style.setProperty('--x', e.clientX + 'px');
+            document.body.style.setProperty('--y', e.clientY + 'px');
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            updateThemeIcon(target);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-slate-500';
+            }
+        }
+        updateThemeIcon(localStorage.getItem('theme') || 'light');
+    </script>
+</body>
+
+</html>

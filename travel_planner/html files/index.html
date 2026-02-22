@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI — Explore Your World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+         :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass-bg: rgba(255, 255, 255, 0.45);
+            --glass-border: rgba(255, 255, 255, 0.5);
+            --card-text: #1e293b;
+        }
+        
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass-bg: rgba(30, 41, 59, 0.7);
+            --glass-border: rgba(255, 255, 255, 0.1);
+            --card-text: #f8fafc;
+        }
+        
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            overflow-x: hidden;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+        
+        .iphone-glass {
+            background: var(--glass-bg);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid var(--glass-border);
+        }
+        
+        .iphone-btn {
+            background: rgba(255, 255, 255, 0.6);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.4);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        [data-theme='dark'] .iphone-btn {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.1);
+        }
+        
+        .profile-menu {
+            display: none;
+            position: absolute;
+            top: 110%;
+            right: 0;
+            width: 220px;
+            z-index: 100;
+        }
+        
+        .profile-menu.active {
+            display: block;
+            animation: slideDown 0.3s ease;
+        }
+        
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: #fff;
+            width: 0%;
+        }
+        
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.12) 0%, transparent 40%);
+            z-index: 1;
+        }
+        
+        .content-hidden {
+            opacity: 0;
+            filter: blur(40px);
+        }
+        
+        .content-transition {
+            transition: opacity 0.4s ease, filter 0.4s ease;
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+
+<body onmousemove="updateSpotlight(event)">
+    <div id="spotlight"></div>
+
+    <nav class="fixed top-0 w-full z-[100] px-6 py-8">
+        <div class="max-w-7xl mx-auto flex justify-between items-center iphone-glass px-6 py-3 rounded-[32px] shadow-sm">
+            <a href="index.html" class="flex items-center gap-3 text-2xl font-black">
+                <i class="fa-solid fa-mountain-sun text-sky-400"></i>
+                <span>Wander<span class="text-sky-400">AI</span></span>
+            </a>
+
+            <div class="flex items-center gap-3 relative" id="authContainer">
+            </div>
+        </div>
+    </nav>
+
+    <main class="relative pt-48 pb-20 px-6 z-10">
+        <div class="max-w-4xl mx-auto text-center mb-16">
+            <h1 class="text-7xl font-black tracking-tighter mb-6 leading-tight">
+                Your next story<br><span class="text-sky-400">starts here.</span>
+            </h1>
+            <a href="create-trip.html" class="inline-block bg-sky-400 px-10 py-4 rounded-full text-white font-bold text-lg shadow-xl hover:scale-105 transition-all">
+                Plan New Trip
+            </a>
+        </div>
+
+        <div class="max-w-6xl mx-auto h-[500px] flex gap-6">
+            <div class="w-20 flex flex-col gap-4 py-8">
+                <a href="itinerary.html" class="w-16 h-16 iphone-glass rounded-[24px] flex items-center justify-center text-sky-400 iphone-btn" title="View Itinerary">
+                    <i class="fa-solid fa-map-location-dot text-xl"></i>
+                </a>
+                <a href="saved-trips.html" class="w-16 h-16 iphone-glass rounded-[24px] flex items-center justify-center text-pink-400 iphone-btn" title="Saved Trips">
+                    <i class="fa-solid fa-heart text-xl"></i>
+                </a>
+                <button onclick="rotate()" class="w-16 h-16 iphone-glass rounded-[24px] flex items-center justify-center text-slate-400 iphone-btn">
+                    <i class="fa-solid fa-arrow-rotate-right text-xl"></i>
+                </button>
+            </div>
+
+            <div id="displayFrame" class="iphone-glass overflow-hidden flex-1 relative rounded-[48px] shadow-2xl content-transition cursor-pointer" onclick="handleGenerateClick()">
+                <div class="h-1.5 w-full absolute top-0 left-0 bg-white/20 z-20">
+                    <div id="progressFill" class="progress-fill"></div>
+                </div>
+                <img id="mainImg" src="https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600" class="w-full h-full object-cover">
+                <div class="absolute bottom-10 left-10 iphone-glass p-6 rounded-[32px] z-10">
+                    <p class="text-[10px] font-black uppercase text-sky-400">Trending Now</p>
+                    <h2 id="locName" class="text-3xl font-black text-[var(--card-text)]">Manali, Himachal</h2>
+                </div>
+                <div class="absolute top-8 right-8 iphone-glass px-4 py-2 rounded-full text-[10px] font-black z-10">
+                    <span id="currentIdx">1</span> / 10
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <script>
+        const sets = [{
+            img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1600",
+            loc: "Manali, Himachal"
+        }, {
+            img: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=1600",
+            loc: "Alleppey, Kerala"
+        }, {
+            img: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1600",
+            loc: "Jaipur, Rajasthan"
+        }, {
+            img: "https://images.unsplash.com/photo-1627664819818-e147d6221422?w=1600",
+            loc: "Hampi, Karnataka"
+        }, {
+            img: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1600",
+            loc: "Agra, Uttar Pradesh"
+        }, {
+            img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1600",
+            loc: "Goa, India"
+        }, {
+            img: "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=1600",
+            loc: "Munnar, Kerala"
+        }, {
+            img: "https://images.unsplash.com/photo-1571536802807-30451e41bb4a?w=1600",
+            loc: "Varanasi, UP"
+        }, {
+            img: "https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1600",
+            loc: "Mumbai, Maharashtra"
+        }, {
+            img: "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1600",
+            loc: "Srinagar, Kashmir"
+        }];
+
+        let currentSet = 0;
+        const frame = document.getElementById('displayFrame');
+        const fill = document.getElementById('progressFill');
+
+        function checkAuth() {
+            const container = document.getElementById('authContainer');
+            const theme = document.documentElement.getAttribute('data-theme');
+            const themeIcon = theme === 'dark' ? 'fa-sun text-yellow-400' : 'fa-moon text-slate-500';
+
+            container.innerHTML = `
+                <button onclick="toggleTheme()" class="w-10 h-10 iphone-btn rounded-xl flex items-center justify-center mr-2">
+                    <i class="fa-solid ${themeIcon}"></i>
+                </button>
+                <button onclick="toggleProfile()" class="iphone-btn pl-2 pr-5 py-2 rounded-full flex items-center gap-3">
+                    <div class="w-9 h-9 bg-sky-400 rounded-full flex items-center justify-center text-white overflow-hidden">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User">
+                    </div>
+                    <span class="text-sm font-extrabold text-inherit">Account</span>
+                </button>
+                <div id="profileMenu" class="profile-menu iphone-glass rounded-3xl p-4 shadow-xl">
+                    <a href="profile.html" class="w-full flex items-center px-4 py-3 hover:bg-sky-400/10 rounded-xl text-sm font-bold"><i class="fa-solid fa-user mr-2 text-sky-400"></i> Profile</a>
+                    <button onclick="alert('Logged Out')" class="w-full flex items-center px-4 py-3 hover:bg-red-500/10 rounded-xl text-sm font-bold text-red-500"><i class="fa-solid fa-right-from-bracket mr-2"></i> Logout</button>
+                </div>
+            `;
+        }
+
+        function toggleTheme() {
+            const target = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            checkAuth();
+        }
+
+        function toggleProfile() {
+            document.getElementById('profileMenu').classList.toggle('active');
+        }
+
+        function startProgress() {
+            fill.style.transition = 'none';
+            fill.style.width = '0%';
+            setTimeout(() => {
+                fill.style.transition = 'width 5000ms linear';
+                fill.style.width = '100%';
+            }, 50);
+        }
+
+        function rotate() {
+            frame.classList.add('content-hidden');
+            setTimeout(() => {
+                currentSet = (currentSet + 1) % sets.length;
+                document.getElementById('mainImg').src = sets[currentSet].img;
+                document.getElementById('locName').innerText = sets[currentSet].loc;
+                document.getElementById('currentIdx').innerText = currentSet + 1;
+                startProgress();
+                frame.classList.remove('content-hidden');
+            }, 400);
+        }
+
+        function updateSpotlight(e) {
+            document.body.style.setProperty('--x', e.clientX + 'px');
+            document.body.style.setProperty('--y', e.clientY + 'px');
+        }
+
+        async function handleGenerateClick() {
+            // This function handles the logic you had floating at the bottom
+            try {
+                // In a real scenario, formData would come from a modal or form
+                const dummyData = {
+                    destination: sets[currentSet].loc
+                };
+                const response = await fetch('http://localhost:5000/api/trips/generate', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(dummyData)
+                });
+                const result = await response.json();
+                if (result.success) {
+                    window.location.href = `trip-overview.html?id=${result.tripId}`;
+                } else {
+                    // Fallback if backend isn't running yet
+                    window.location.href = `trip-overview.html?dest=${sets[currentSet].loc}`;
+                }
+            } catch (e) {
+                window.location.href = `trip-overview.html?dest=${sets[currentSet].loc}`;
+            }
+        }
+
+        window.onload = () => {
+            checkAuth();
+            startProgress();
+            setInterval(rotate, 5400);
+        };
+
+        window.onclick = e => {
+            const menu = document.getElementById('profileMenu');
+            if (menu && !e.target.closest('#authContainer')) menu.classList.remove('active');
+        };
+    </script>
+</body>
+
+</html>
