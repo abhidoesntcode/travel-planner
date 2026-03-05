@@ -1,0 +1,1661 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI — Explore Your World</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass-bg: rgba(255, 255, 255, 0.15);
+            --glass-border: rgba(255, 255, 255, 0.3);
+        }
+
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass-bg: rgba(15, 23, 42, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-snap-type: y mandatory;
+            overflow-y: scroll;
+            height: 100%;
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background: #000;
+            color: #fff;
+            height: 100%;
+        }
+
+        /* ─── NAV ─── */
+        nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 200;
+            padding: 20px 32px;
+        }
+
+        .nav-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(255, 255, 255, 0.08);
+            backdrop-filter: blur(20px) saturate(180%);
+            -webkit-backdrop-filter: blur(20px) saturate(180%);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            padding: 10px 16px 10px 24px;
+        }
+
+        .nav-logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 1.4rem;
+            font-weight: 900;
+            color: #fff;
+            text-decoration: none;
+            letter-spacing: -0.5px;
+        }
+
+        .nav-logo span {
+            color: #38BDF8;
+        }
+
+        .iphone-btn {
+            background: rgba(255, 255, 255, 0.12);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer;
+            color: #fff;
+        }
+
+        .iphone-btn:hover {
+            background: rgba(255, 255, 255, 0.22);
+            transform: scale(1.04);
+        }
+
+        .profile-menu {
+            display: none;
+            position: absolute;
+            top: 110%;
+            right: 0;
+            width: 220px;
+            z-index: 300;
+        }
+
+        .profile-menu.active {
+            display: block;
+            animation: slideDown 0.25s ease;
+        }
+
+        @keyframes slideDown {
+            from {
+                opacity: 0;
+                transform: translateY(-8px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* ─── SLIDE SECTIONS ─── */
+        .slide {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            scroll-snap-align: start;
+            overflow: hidden;
+        }
+
+        /* Background layers for parallax */
+        .slide-bg {
+            position: absolute;
+            inset: -8%;
+            background-size: cover;
+            background-position: center;
+            transition: transform 0.08s linear;
+            will-change: transform;
+        }
+
+        .slide-bg-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(to top,
+                    rgba(0, 0, 0, 0.85) 0%,
+                    rgba(0, 0, 0, 0.35) 50%,
+                    rgba(0, 0, 0, 0.15) 100%);
+            z-index: 2;
+        }
+
+        /* Color tint overlay unique per slide */
+        .slide-tint {
+            position: absolute;
+            inset: 0;
+            z-index: 3;
+            opacity: 0;
+            mix-blend-mode: color;
+            transition: opacity 0.8s ease;
+        }
+
+        /* ─── SLIDE CONTENT ─── */
+        .slide-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            z-index: 10;
+            padding: 60px 80px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+        }
+
+        .slide-label {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.25em;
+            text-transform: uppercase;
+            color: #38BDF8;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease 0.1s, transform 0.6s ease 0.1s;
+        }
+
+        .slide-title {
+            font-size: clamp(3rem, 7vw, 6rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -2px;
+            color: #fff;
+            margin: 12px 0 6px;
+            opacity: 0;
+            transform: translateY(40px);
+            transition: opacity 0.7s ease 0.2s, transform 0.7s ease 0.2s;
+        }
+
+        .slide-subtitle {
+            font-size: 1rem;
+            font-weight: 500;
+            color: rgba(255, 255, 255, 0.6);
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease 0.35s, transform 0.6s ease 0.35s;
+        }
+
+        .slide-cta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 16px;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease 0.45s, transform 0.6s ease 0.45s;
+        }
+
+        .slide-cta a {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: #38BDF8;
+            color: #000;
+            font-weight: 800;
+            font-size: 0.9rem;
+            padding: 14px 28px;
+            border-radius: 9999px;
+            text-decoration: none;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            box-shadow: 0 0 40px rgba(56, 189, 248, 0.4);
+        }
+
+        .slide-cta a:hover {
+            transform: scale(1.06);
+            box-shadow: 0 0 60px rgba(56, 189, 248, 0.6);
+        }
+
+        .slide-cta .explore-btn {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.85rem;
+            padding: 12px 24px;
+            border-radius: 9999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: none;
+        }
+
+        .slide-cta .explore-btn:hover {
+            background: rgba(255, 255, 255, 0.2);
+            transform: scale(1.04);
+            box-shadow: none;
+        }
+
+        /* Activate animations when slide is active */
+        .slide.active .slide-label,
+        .slide.active .slide-title,
+        .slide.active .slide-subtitle,
+        .slide.active .slide-cta {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide.active .slide-tint {
+            opacity: 0.25;
+        }
+
+        /* ─── TOP BAR: stats strip ─── */
+        .slide-top-bar {
+            position: absolute;
+            top: 110px;
+            left: 80px;
+            right: 80px;
+            z-index: 10;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            opacity: 0;
+            transform: translateY(-16px);
+            transition: opacity 0.6s ease 0.5s, transform 0.6s ease 0.5s;
+        }
+
+        .slide.active .slide-top-bar {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        .slide-index-badge {
+            font-size: 0.75rem;
+            font-weight: 800;
+            letter-spacing: 0.15em;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .slide-tags {
+            display: flex;
+            gap: 8px;
+        }
+
+        .slide-tag {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 9999px;
+            padding: 5px 14px;
+            font-size: 0.72rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* ─── PROGRESS DOTS ─── */
+        #progressDots {
+            position: fixed;
+            right: 32px;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .dot {
+            width: 6px;
+            height: 6px;
+            border-radius: 9999px;
+            background: rgba(255, 255, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+        }
+
+        .dot::after {
+            content: '';
+            position: absolute;
+            inset: -4px;
+            border-radius: 9999px;
+            border: 1.5px solid transparent;
+            transition: border-color 0.4s ease;
+        }
+
+        .dot.active {
+            background: #38BDF8;
+            height: 28px;
+            box-shadow: 0 0 12px rgba(56, 189, 248, 0.7);
+        }
+
+        .dot.active::after {
+            border-color: rgba(56, 189, 248, 0.4);
+        }
+
+        .dot:hover:not(.active) {
+            background: rgba(255, 255, 255, 0.6);
+            transform: scale(1.3);
+        }
+
+        /* ─── SCROLL HINT ─── */
+        #scrollHint {
+            position: fixed;
+            bottom: 36px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 200;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            transition: opacity 0.4s ease;
+        }
+
+        #scrollHint span {
+            font-size: 0.65rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .scroll-wheel {
+            width: 24px;
+            height: 38px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 12px;
+            display: flex;
+            justify-content: center;
+            padding-top: 6px;
+        }
+
+        .scroll-wheel::before {
+            content: '';
+            width: 4px;
+            height: 8px;
+            background: rgba(255, 255, 255, 0.6);
+            border-radius: 9999px;
+            animation: wheelScroll 1.8s ease infinite;
+        }
+
+        @keyframes wheelScroll {
+            0% {
+                transform: translateY(0);
+                opacity: 1;
+            }
+
+            80% {
+                transform: translateY(12px);
+                opacity: 0;
+            }
+
+            100% {
+                transform: translateY(0);
+                opacity: 0;
+            }
+        }
+
+        /* ─── HERO SLIDE SPECIAL ─── */
+        .hero-text-block {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            text-align: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hero-text-block h1 {
+            font-size: clamp(3.5rem, 9vw, 8rem);
+            font-weight: 900;
+            line-height: 1;
+            letter-spacing: -3px;
+            color: #fff;
+            opacity: 0;
+            transform: translateY(30px) scale(0.97);
+            transition: opacity 0.8s ease 0.1s, transform 0.8s ease 0.1s;
+        }
+
+        .hero-text-block h1 span {
+            color: #38BDF8;
+        }
+
+        .hero-text-block p {
+            font-size: 1.1rem;
+            color: rgba(255, 255, 255, 0.6);
+            margin-top: 16px;
+            font-weight: 500;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.6s ease 0.4s, transform 0.6s ease 0.4s;
+        }
+
+        .slide.active .hero-text-block h1,
+        .slide.active .hero-text-block p {
+            opacity: 1;
+            transform: translateY(0) scale(1);
+        }
+
+        .hero-cta-strip {
+            position: absolute;
+            bottom: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            gap: 16px;
+            opacity: 0;
+            transition: opacity 0.6s ease 0.6s;
+        }
+
+        .slide.active .hero-cta-strip {
+            opacity: 1;
+        }
+
+        /* ─── HORIZONTAL TICKER ─── */
+        .slide-ticker {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 48px;
+            background: rgba(56, 189, 248, 0.15);
+            backdrop-filter: blur(10px);
+            border-top: 1px solid rgba(56, 189, 248, 0.3);
+            z-index: 20;
+            overflow: hidden;
+            display: flex;
+            align-items: center;
+        }
+
+        .ticker-track {
+            display: flex;
+            gap: 60px;
+            white-space: nowrap;
+            animation: tickerRoll 25s linear infinite;
+        }
+
+        .ticker-track span {
+            font-size: 0.7rem;
+            font-weight: 800;
+            letter-spacing: 0.2em;
+            text-transform: uppercase;
+            color: rgba(56, 189, 248, 0.9);
+        }
+
+        @keyframes tickerRoll {
+            from {
+                transform: translateX(0);
+            }
+
+            to {
+                transform: translateX(-50%);
+            }
+        }
+
+        /* ─── CINEMATIC ZOOM EFFECT ─── */
+        .slide .slide-bg {
+            transform: scale(1.08);
+            transition: transform 1.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+
+        .slide.active .slide-bg {
+            transform: scale(1);
+        }
+
+        /* ─── GLASS PILL ─── */
+        .glass-pill {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(14px);
+            border: 1px solid rgba(255, 255, 255, 0.18);
+            border-radius: 9999px;
+            padding: 8px 20px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: rgba(255, 255, 255, 0.85);
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .glass-pill:hover {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ─── CURSOR GLOW ─── */
+        #cursorGlow {
+            position: fixed;
+            pointer-events: none;
+            width: 400px;
+            height: 400px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(56, 189, 248, 0.08) 0%, transparent 70%);
+            transform: translate(-50%, -50%);
+            z-index: 1;
+            transition: left 0.12s ease, top 0.12s ease;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .slide-content {
+                padding: 40px 28px;
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 24px;
+            }
+
+            .slide-title {
+                font-size: 2.8rem;
+                letter-spacing: -1px;
+            }
+
+            .slide-top-bar {
+                left: 28px;
+                right: 28px;
+                top: 100px;
+            }
+
+            .hero-text-block h1 {
+                font-size: 3rem;
+                letter-spacing: -1px;
+            }
+
+            #progressDots {
+                right: 14px;
+            }
+        }
+    </style>
+    <script>
+        const savedTheme = localStorage.getItem('theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+</head>
+
+<body>
+    <!-- Cursor glow -->
+    <div id="cursorGlow"></div>
+
+    <!-- ─── NAVBAR ─── -->
+    <nav>
+        <div class="nav-inner">
+            <a href="index.html" class="nav-logo">
+                <i class="fa-solid fa-mountain-sun" style="color:#38BDF8"></i>
+                Wander<span>AI</span>
+            </a>
+            <div style="display:flex; align-items:center; gap:10px; position:relative;" id="authContainer"></div>
+        </div>
+    </nav>
+
+    <!-- ─── PROGRESS DOTS ─── -->
+    <div id="progressDots"></div>
+
+    <!-- Scroll hint is now inside slide-0 for better visibility -->
+
+    <!-- ═══════════════════════════════════ SLIDES ═══════════════════════════════════ -->
+
+    <!-- SLIDE 0: HERO -->
+    <section class="slide" id="slide-0" data-index="0">
+        <!-- India map canvas replaces static background image -->
+        <canvas id="indiaMapCanvas"
+            style="position:absolute;inset:0;width:100%;height:100%;display:block;z-index:0;"></canvas>
+
+        <!-- Container for dynamic city scenery popups over the globe -->
+        <div id="globePopups" style="position:absolute;inset:0;pointer-events:none;z-index:10;overflow:hidden;"></div>
+
+        <!-- Hero text -->
+        <div class="hero-text-block">
+            <h1>Your next story<br><span>starts here.</span></h1>
+            <p>10 breathtaking destinations. Infinite possibilities.</p>
+        </div>
+
+        <!-- CTAs -->
+        <div class="hero-cta-strip">
+            <a href="create-trip.html"
+                style="display:inline-flex;align-items:center;gap:10px;background:#38BDF8;color:#000;font-weight:800;font-size:0.95rem;padding:16px 36px;border-radius:9999px;text-decoration:none;box-shadow:0 0 40px rgba(56,189,248,0.5);transition:all 0.2s ease;"
+                onmouseover="this.style.transform='scale(1.06)'" onmouseout="this.style.transform='scale(1)'">
+                <i class="fa-solid fa-route"></i> Plan New Trip
+            </a>
+            <button class="glass-pill" onclick="scrollToSlide(1)">
+                <i class="fa-solid fa-arrow-down"></i> Explore Places
+            </button>
+        </div>
+
+        <!-- Scroll hint — visible at bottom of hero -->
+        <div id="scrollHint"
+            style="position:absolute;bottom:64px;left:50%;transform:translateX(-50%);z-index:20;display:flex;flex-direction:column;align-items:center;gap:10px;transition:opacity 0.4s;">
+            <span
+                style="font-size:0.7rem;font-weight:800;letter-spacing:0.22em;text-transform:uppercase;color:rgba(255,255,255,0.7);">Scroll
+                to explore</span>
+            <div style="display:flex;flex-direction:column;align-items:center;gap:3px;">
+                <div
+                    style="width:1.5px;height:28px;background:linear-gradient(to bottom,rgba(56,189,248,0.9),transparent);animation:scrollPulse 1.6s ease-in-out infinite;">
+                </div>
+                <i class="fa-solid fa-chevron-down"
+                    style="color:rgba(56,189,248,0.85);font-size:0.65rem;animation:scrollPulse 1.6s ease-in-out infinite 0.2s;"></i>
+            </div>
+        </div>
+
+        <!-- Ticker -->
+        <div class="slide-ticker">
+            <div class="ticker-track" id="tickerTrack"></div>
+        </div>
+    </section>
+
+    <!-- SLIDES 1–10: Destinations (generated by JS) -->
+    <div id="destinationSlides"></div>
+
+    <!-- ─── SCRIPTS ─── -->
+    <script>
+        // ── DATA ──
+        const destinations = [
+            {
+                img: "https://images.unsplash.com/photo-1501785888041-af3ef285b470?w=1920",
+                loc: "Manali, Himachal Pradesh",
+                short: "Manali",
+                label: "Snow & Serenity",
+                tags: ["Adventure", "Mountains", "Winter"],
+                tint: "#60A5FA",
+                desc: "Valley of Gods nestled in the Himalayas"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1593693397690-362cb9666fc2?w=1920",
+                loc: "Alleppey, Kerala",
+                short: "Alleppey",
+                label: "Backwater Bliss",
+                tags: ["Houseboat", "Scenic", "Peaceful"],
+                tint: "#34D399",
+                desc: "Drift through emerald canals on a houseboat"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1599661046289-e31897846e41?w=1920",
+                loc: "Jaipur, Rajasthan",
+                short: "Jaipur",
+                label: "The Pink City",
+                tags: ["Heritage", "Royalty", "Culture"],
+                tint: "#F472B6",
+                desc: "Royal palaces, forts and bazaars of gold"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1627664819818-e147d6221422?w=1920",
+                loc: "Hampi, Karnataka",
+                short: "Hampi",
+                label: "Ruins of an Empire",
+                tags: ["UNESCO", "Ancient", "Mystical"],
+                tint: "#FB923C",
+                desc: "Stones that echo a thousand-year saga"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1524492412937-b28074a5d7da?w=1920",
+                loc: "Agra, Uttar Pradesh",
+                short: "Agra",
+                label: "Icon of Love",
+                tags: ["UNESCO", "Architecture", "Iconic"],
+                tint: "#C084FC",
+                desc: "The Taj Mahal — a monument to eternal love"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1512343879784-a960bf40e7f2?w=1920",
+                loc: "Goa, India",
+                short: "Goa",
+                label: "Sun, Sand & Vibes",
+                tags: ["Beach", "Nightlife", "Chill"],
+                tint: "#FACC15",
+                desc: "Golden beaches, spice trails and warm seas"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1614082242765-7c98ca0f3df3?w=1920",
+                loc: "Munnar, Kerala",
+                short: "Munnar",
+                label: "Tea Garden Heaven",
+                tags: ["Nature", "Hills", "Mist"],
+                tint: "#4ADE80",
+                desc: "Rolling carpets of green kissed by monsoon clouds"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1571536802807-30451e41bb4a?w=1920",
+                loc: "Varanasi, Uttar Pradesh",
+                short: "Varanasi",
+                label: "City of Light",
+                tags: ["Spiritual", "Sacred", "Ancient"],
+                tint: "#F97316",
+                desc: "Where life and eternity meet on the Ganges"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1562979314-bee7453e911c?w=1920",
+                loc: "Mumbai, Maharashtra",
+                short: "Mumbai",
+                label: "Maximum City",
+                tags: ["Metropolis", "Food", "Cinema"],
+                tint: "#38BDF8",
+                desc: "A city that never sleeps, never stops dreaming"
+            },
+            {
+                img: "https://images.unsplash.com/photo-1589308078059-be1415eab4c3?w=1920",
+                loc: "Srinagar, Kashmir",
+                short: "Srinagar",
+                label: "Paradise on Earth",
+                tags: ["Dal Lake", "Houseboats", "Mountains"],
+                tint: "#818CF8",
+                desc: "Shikara rides on mirror lakes beneath the Himalayas"
+            }
+        ];
+
+        // ── BUILD TICKER ──
+        const tickerTrack = document.getElementById('tickerTrack');
+        const tickerItems = [...destinations, ...destinations]; // double for seamless loop
+        tickerItems.forEach(d => {
+            const span = document.createElement('span');
+            span.innerHTML = `<i class="fa-solid fa-location-dot" style="opacity:0.5;margin-right:8px;"></i>${d.short} &nbsp;·`;
+            tickerTrack.appendChild(span);
+        });
+
+        // ── BUILD DESTINATION SLIDES ──
+        const container = document.getElementById('destinationSlides');
+        destinations.forEach((d, i) => {
+            const slideIndex = i + 1;
+            container.innerHTML += `
+            <section class="slide" id="slide-${slideIndex}" data-index="${slideIndex}">
+                <div class="slide-bg" id="bg-${slideIndex}"
+                    style="background-image: url('${d.img}');"
+                    data-index="${slideIndex}">
+                </div>
+                <div class="slide-bg-overlay"></div>
+                <div class="slide-tint" style="background:${d.tint};"></div>
+
+                <!-- Top bar -->
+                <div class="slide-top-bar">
+                    <span class="slide-index-badge">${String(slideIndex).padStart(2, '0')} / 10</span>
+                    <div class="slide-tags">
+                        ${d.tags.map(t => `<span class="slide-tag">${t}</span>`).join('')}
+                    </div>
+                </div>
+
+                <!-- Bottom content -->
+                <div class="slide-content">
+                    <div>
+                        <p class="slide-label">${d.label}</p>
+                        <h2 class="slide-title">${d.short}</h2>
+                        <p class="slide-subtitle">${d.desc}</p>
+                    </div>
+                    <div class="slide-cta">
+                        <a href="create-trip.html?dest=${encodeURIComponent(d.loc)}">
+                            <i class="fa-solid fa-route"></i> Plan This Trip
+                        </a>
+                        <button class="glass-pill explore-btn" onclick="scrollToSlide(${slideIndex < 10 ? slideIndex + 1 : 0})">
+                            ${slideIndex < 10 ? 'Next Destination <i class="fa-solid fa-arrow-down"></i>' : 'Back to Start <i class="fa-solid fa-arrow-up"></i>'}
+                        </button>
+                    </div>
+                </div>
+            </section>
+            `;
+        });
+
+        // ── BUILD PROGRESS DOTS ──
+        const dotsContainer = document.getElementById('progressDots');
+        const totalSlides = 11;
+        for (let i = 0; i < totalSlides; i++) {
+            const dot = document.createElement('div');
+            dot.className = 'dot';
+            dot.dataset.index = i;
+            dot.title = i === 0 ? 'Home' : destinations[i - 1].short;
+            dot.onclick = () => scrollToSlide(i);
+            dotsContainer.appendChild(dot);
+        }
+
+        function updateDots(index) {
+            document.querySelectorAll('.dot').forEach((d, i) => {
+                d.classList.toggle('active', i === index);
+            });
+        }
+
+        function scrollToSlide(index) {
+            const el = document.getElementById(`slide-${index}`);
+            if (el) el.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        // ── INTERSECTION OBSERVER ──
+        let currentSlideIndex = 0;
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting && entry.intersectionRatio > 0.5) {
+                    const idx = parseInt(entry.target.dataset.index);
+                    entry.target.classList.add('active');
+                    currentSlideIndex = idx;
+                    updateDots(idx);
+
+                    // Hide scroll hint after first scroll
+                    if (idx > 0) {
+                        document.getElementById('scrollHint').style.opacity = '0';
+                        document.getElementById('scrollHint').style.pointerEvents = 'none';
+                    } else {
+                        document.getElementById('scrollHint').style.opacity = '1';
+                        document.getElementById('scrollHint').style.pointerEvents = 'auto';
+                    }
+                } else {
+                    entry.target.classList.remove('active');
+                }
+            });
+        }, { threshold: 0.5 });
+
+        document.querySelectorAll('.slide').forEach(slide => observer.observe(slide));
+
+        // ── MOUSE PARALLAX ──
+        document.addEventListener('mousemove', (e) => {
+            const xCenter = e.clientX / window.innerWidth - 0.5;
+            const yCenter = e.clientY / window.innerHeight - 0.5;
+
+            // Move active slide's background
+            const activeBg = document.querySelector(`#slide-${currentSlideIndex} .slide-bg`);
+            if (activeBg) {
+                activeBg.style.transform = `scale(1) translate(${xCenter * -18}px, ${yCenter * -18}px)`;
+            }
+
+            // Update cursor glow
+            const glow = document.getElementById('cursorGlow');
+            glow.style.left = e.clientX + 'px';
+            glow.style.top = e.clientY + 'px';
+        });
+
+        // Reset parallax when mouse leaves
+        document.addEventListener('mouseleave', () => {
+            const activeBg = document.querySelector(`#slide-${currentSlideIndex} .slide-bg`);
+            if (activeBg) activeBg.style.transform = 'scale(1) translate(0px,0px)';
+        });
+
+        // ── AUTH / NAV ──
+        function checkAuth() {
+            const container = document.getElementById('authContainer');
+            const theme = document.documentElement.getAttribute('data-theme');
+            const themeIcon = theme === 'dark' ? 'fa-sun' : 'fa-moon';
+            const themeColor = theme === 'dark' ? '#FACC15' : '#64748b';
+
+            container.innerHTML = `
+                <button onclick="toggleTheme()"
+                    style="width:40px;height:40px;border-radius:12px;display:flex;align-items:center;justify-content:center;cursor:pointer;"
+                    class="iphone-btn">
+                    <i class="fa-solid ${themeIcon}" style="color:${themeColor};font-size:0.9rem;"></i>
+                </button>
+                <button onclick="toggleProfile()"
+                    style="display:flex;align-items:center;gap:10px;border-radius:9999px;padding:6px 20px 6px 6px;cursor:pointer;"
+                    class="iphone-btn">
+                    <div style="width:36px;height:36px;background:#38BDF8;border-radius:50%;display:flex;align-items:center;justify-content:center;overflow:hidden;">
+                        <img src="https://api.dicebear.com/7.x/avataaars/svg?seed=Felix" alt="User" style="width:100%;height:100%;">
+                    </div>
+                    <span style="font-size:0.85rem;font-weight:800;">Account</span>
+                </button>
+                <div id="profileMenu" class="profile-menu" style="background:rgba(15,23,42,0.85);backdrop-filter:blur(20px);border:1px solid rgba(255,255,255,0.1);border-radius:20px;padding:12px;box-shadow:0 24px 60px rgba(0,0,0,0.5);">
+                    <a href="profile.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:0.85rem;font-weight:700;color:#fff;text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.1)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-user" style="color:#38BDF8;width:16px;"></i> Profile
+                    </a>
+                    <a href="saved-trips.html" style="display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:0.85rem;font-weight:700;color:#fff;text-decoration:none;transition:background 0.2s;" onmouseover="this.style.background='rgba(56,189,248,0.1)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-heart" style="color:#F472B6;width:16px;"></i> Saved Trips
+                    </a>
+                    <div style="height:1px;background:rgba(255,255,255,0.08);margin:6px 0;"></div>
+                    <button onclick="alert('Logged Out')" style="width:100%;display:flex;align-items:center;gap:10px;padding:10px 14px;border-radius:12px;font-size:0.85rem;font-weight:700;color:#f87171;background:transparent;border:none;cursor:pointer;transition:background 0.2s;" onmouseover="this.style.background='rgba(239,68,68,0.1)'" onmouseout="this.style.background='transparent'">
+                        <i class="fa-solid fa-right-from-bracket" style="width:16px;"></i> Logout
+                    </button>
+                </div>
+            `;
+        }
+
+        function toggleTheme() {
+            const t = document.documentElement.getAttribute('data-theme') === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', t);
+            localStorage.setItem('theme', t);
+            checkAuth();
+        }
+
+        function toggleProfile() {
+            document.getElementById('profileMenu').classList.toggle('active');
+        }
+
+        window.onclick = e => {
+            const menu = document.getElementById('profileMenu');
+            if (menu && !e.target.closest('#authContainer')) menu.classList.remove('active');
+        };
+
+        // ── KEYBOARD NAVIGATION ──
+        document.addEventListener('keydown', e => {
+            if (e.key === 'ArrowDown' || e.key === 'PageDown') {
+                e.preventDefault();
+                scrollToSlide(Math.min(currentSlideIndex + 1, 10));
+            }
+            if (e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                scrollToSlide(Math.max(currentSlideIndex - 1, 0));
+            }
+        });
+
+        // ── INIT ──
+        window.onload = () => {
+            checkAuth();
+            updateDots(0);
+            // Trigger active on first slide
+            document.getElementById('slide-0').classList.add('active');
+        };
+    </script>
+
+    <!-- ─── GLOBE ANIMATION ─── -->
+    <script>
+        (function initGlobe() {
+            const canvas = document.getElementById('indiaMapCanvas');
+            if (!canvas) return;
+            const ctx = canvas.getContext('2d');
+
+            function resize() {
+                canvas.width = canvas.offsetWidth || window.innerWidth;
+                canvas.height = canvas.offsetHeight || window.innerHeight;
+            }
+            resize();
+            window.addEventListener('resize', resize);
+
+            // ── GLOBE CITIES (lat/lon on sphere) ──
+            const CITIES = [
+                // Indian destinations with scenery images
+                { lat: 28.6, lon: 77.2, img: 'https://images.unsplash.com/photo-1587474260580-58f57c518fb0?auto=format&fit=crop&q=80&w=200&h=200', name: 'New Delhi' },
+                { lat: 19.1, lon: 72.9, img: 'https://images.unsplash.com/photo-1566552881560-0be862a7c445?auto=format&fit=crop&q=80&w=200&h=200', name: 'Mumbai' },
+                { lat: 12.9, lon: 77.6, img: 'https://images.unsplash.com/photo-1627883354712-1bd07412705f?auto=format&fit=crop&q=80&w=200&h=200', name: 'Bengaluru' },
+                { lat: 26.9, lon: 75.8, img: 'https://images.unsplash.com/photo-1477587458883-47145ed94245?auto=format&fit=crop&q=80&w=200&h=200', name: 'Jaipur' },
+                { lat: 25.3, lon: 83.0, img: 'https://images.unsplash.com/photo-1561361513-2d000a50f0dc?auto=format&fit=crop&q=80&w=200&h=200', name: 'Varanasi' },
+                { lat: 15.5, lon: 73.9, img: 'https://images.unsplash.com/photo-1512343879784-a902bba17f25?auto=format&fit=crop&q=80&w=200&h=200', name: 'Goa' },
+                { lat: 34.1, lon: 74.8, img: 'https://images.unsplash.com/photo-1595815771614-ade9d652a65d?auto=format&fit=crop&q=80&w=200&h=200', name: 'Srinagar' },
+                { lat: 9.9, lon: 76.3, img: 'https://images.unsplash.com/photo-1602216056096-3b40cc0c9944?auto=format&fit=crop&q=80&w=200&h=200', name: 'Kerala' },
+                { lat: 17.4, lon: 78.5, img: 'https://images.unsplash.com/photo-1623910271579-2b814e4142fd?auto=format&fit=crop&q=80&w=200&h=200', name: 'Hyderabad' },
+                // International hubs
+                { lat: 51.5, lon: -0.1, img: 'https://images.unsplash.com/photo-1513635269975-59693e0ce5ce?auto=format&fit=crop&q=80&w=200&h=200', name: 'London' },
+                { lat: 48.9, lon: 2.3, img: 'https://images.unsplash.com/photo-1502602898657-3e907611593c?auto=format&fit=crop&q=80&w=200&h=200', name: 'Paris' },
+                { lat: 40.7, lon: -74.0, img: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?auto=format&fit=crop&q=80&w=200&h=200', name: 'New York' },
+                { lat: 35.7, lon: 139.7, img: 'https://images.unsplash.com/photo-1503899036084-c55cdd92da26?auto=format&fit=crop&q=80&w=200&h=200', name: 'Tokyo' },
+                { lat: 25.2, lon: 55.3, img: 'https://images.unsplash.com/photo-1512453979798-5ea266f8880c?auto=format&fit=crop&q=80&w=200&h=200', name: 'Dubai' },
+            ];
+
+            let rotation = 0;     // longitude rotation offset (radians)
+            let particles = [];
+            let arcs = [];
+            let popups = [];      // active HTML popups { id, city, t, el }
+            const popupContainer = document.getElementById('globePopups');
+            for (let i = 0; i < 140; i++) {
+                particles.push({
+                    x: Math.random(), y: Math.random(),
+                    r: Math.random() * 1.0 + 0.15,
+                    a: Math.random() * 0.45 + 0.08,
+                    tw: Math.random() * Math.PI * 2,
+                    ts: 0.015 + Math.random() * 0.025,
+                });
+            }
+
+            // Orthographic projection of a lat/lon on the sphere
+            function project(lat, lon, cx, cy, R) {
+                const laR = lat * Math.PI / 180;
+                const loR = lon * Math.PI / 180 + rotation;
+                const x = cx + R * Math.cos(laR) * Math.sin(loR);
+                const y = cy - R * Math.sin(laR);
+                const z = Math.cos(laR) * Math.cos(loR); // >0 = front-facing
+                return { x, y, z };
+            }
+
+            // Spawn random flight arc between two cities
+            function spawnArc() {
+                setTimeout(() => {
+                    if (arcs.length < 5) {
+                        // Filter cities to only those visible on the front of the globe
+                        const frontCities = CITIES.filter(city => {
+                            const laR = city.lat * Math.PI / 180;
+                            const loR = city.lon * Math.PI / 180 + rotation;
+                            return (Math.cos(laR) * Math.cos(loR)) > 0.15;
+                        });
+
+                        // Need at least 2 visible cities to make an arc
+                        if (frontCities.length >= 2) {
+                            const i = Math.floor(Math.random() * frontCities.length);
+                            let j; do { j = Math.floor(Math.random() * frontCities.length); } while (j === i);
+                            arcs.push({ c1: frontCities[i], c2: frontCities[j], prog: 0, alpha: 0, phase: 'grow', hasPopup: false });
+                        }
+                    }
+                    spawnArc();
+                }, Math.random() * 2200 + 1200);
+            }
+            spawnArc();
+
+            // Spawn HTML popup
+            function createPopup(city) {
+                const id = 'popup_' + Math.random().toString(36).substr(2, 9);
+                const el = document.createElement('div');
+                el.id = id;
+                el.style.position = 'absolute';
+                el.style.transform = 'translate(-50%, -100%)';
+                el.style.marginTop = '-16px'; // offset above the dot
+                el.style.opacity = '0';
+                el.style.transition = 'opacity 0.4s ease';
+                el.style.background = 'rgba(10, 22, 55, 0.85)';
+                el.style.backdropFilter = 'blur(8px)';
+                el.style.WebkitBackdropFilter = 'blur(8px)';
+                el.style.border = '1px solid rgba(56,189,248,0.4)';
+                el.style.borderRadius = '12px';
+                el.style.padding = '5px';
+                el.style.display = 'flex';
+                el.style.alignItems = 'center';
+                el.style.gap = '10px';
+                el.style.boxShadow = '0 8px 32px rgba(0,0,0,0.5)';
+                el.style.pointerEvents = 'none';
+
+                el.innerHTML = `
+                    <img src="${city.img}" style="width:36px;height:36px;border-radius:8px;object-fit:cover;">
+                    <div style="padding-right:8px;">
+                        <span style="display:block;color:#fff;font-size:0.75rem;font-weight:700;margin-bottom:2px;">${city.name}</span>
+                        <span style="display:block;color:#38BDF8;font-size:0.55rem;font-weight:600;text-transform:uppercase;letter-spacing:1px;">Just Landed</span>
+                    </div>
+                `;
+                popupContainer.appendChild(el);
+
+                // Small delay to allow CSS transition to apply to opacity
+                setTimeout(() => { el.style.opacity = '1'; }, 50);
+
+                popups.push({ id, city, t: 0, el });
+            }
+
+
+            // ── MAIN LOOP ──
+            let last = 0;
+            function draw(ts) {
+                const dt = Math.min(ts - last, 50);
+                last = ts;
+                rotation += dt * 0.00008; // slow auto-spin
+
+                const W = canvas.width, H = canvas.height;
+                ctx.clearRect(0, 0, W, H);
+
+                // 1 ─ Deep space background
+                const bg = ctx.createRadialGradient(W * 0.5, H * 0.4, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.8);
+                bg.addColorStop(0, '#0e1f45');
+                bg.addColorStop(0.5, '#070f26');
+                bg.addColorStop(1, '#020810');
+                ctx.fillStyle = bg;
+                ctx.fillRect(0, 0, W, H);
+
+                // 2 ─ Stars
+                particles.forEach(p => {
+                    p.tw += p.ts * dt * 0.016;
+                    const a = p.a * (0.55 + 0.45 * Math.sin(p.tw));
+                    ctx.beginPath();
+                    ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(210,228,255,${a})`;
+                    ctx.fill();
+                });
+
+                // 3 ─ Globe setup
+                const cx = W * 0.5;
+                const cy = H * 0.5;
+                const R = Math.min(W, H) * 0.36;
+
+                // 3a. Outer atmosphere glow
+                const atmosGrad = ctx.createRadialGradient(cx, cy, R * 0.88, cx, cy, R * 1.35);
+                atmosGrad.addColorStop(0, 'rgba(56,189,248,0.12)');
+                atmosGrad.addColorStop(0.5, 'rgba(56,189,248,0.04)');
+                atmosGrad.addColorStop(1, 'rgba(56,189,248,0)');
+                ctx.beginPath();
+                ctx.arc(cx, cy, R * 1.35, 0, Math.PI * 2);
+                ctx.fillStyle = atmosGrad;
+                ctx.fill();
+
+                // 3b. Globe sphere fill (dark side on right)
+                const sphereGrad = ctx.createRadialGradient(
+                    cx - R * 0.28, cy - R * 0.22, R * 0.05,
+                    cx, cy, R
+                );
+                sphereGrad.addColorStop(0, 'rgba(28, 55, 105, 0.62)');
+                sphereGrad.addColorStop(0.5, 'rgba(10, 22, 55,  0.72)');
+                sphereGrad.addColorStop(1, 'rgba(2,  8,  20,  0.90)');
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.fillStyle = sphereGrad;
+                ctx.fill();
+
+                // 3c. Globe border
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, R, 0, Math.PI * 2);
+                ctx.strokeStyle = 'rgba(56,189,248,0.35)';
+                ctx.lineWidth = 1.5;
+                ctx.shadowColor = '#38BDF8';
+                ctx.shadowBlur = 22;
+                ctx.stroke();
+                ctx.restore();
+
+                // 3d. Clipped grid lines inside the globe
+                ctx.save();
+                ctx.beginPath();
+                ctx.arc(cx, cy, R - 1, 0, Math.PI * 2);
+                ctx.clip();
+
+                // Latitude circles (horizontal ellipses)
+                ctx.strokeStyle = 'rgba(56,189,248,0.10)';
+                ctx.lineWidth = 0.7;
+                [-60, -45, -30, -15, 0, 15, 30, 45, 60].forEach(lat => {
+                    const laR = lat * Math.PI / 180;
+                    const yr = cy - R * Math.sin(laR);
+                    const xr = R * Math.cos(laR);
+                    ctx.beginPath();
+                    ctx.ellipse(cx, yr, xr, xr * 0.12, 0, 0, Math.PI * 2);
+                    ctx.stroke();
+                });
+
+                // Longitude arcs (great-circle lines sampled at many points and rotated)
+                for (let lonDeg = 0; lonDeg < 360; lonDeg += 30) {
+                    const loR0 = lonDeg * Math.PI / 180 + rotation;
+                    // Only draw if roughly facing viewer
+                    const midZ = Math.cos(0) * Math.cos(loR0);
+                    const vis = Math.cos(0) * Math.cos(loR0 + Math.PI);
+                    ctx.strokeStyle = 'rgba(56,189,248,0.08)';
+                    ctx.lineWidth = 0.7;
+                    ctx.beginPath();
+                    let started = false;
+                    for (let lat = -90; lat <= 90; lat += 6) {
+                        const { x, y, z } = project(lat, lonDeg * Math.PI / 180 * (180 / Math.PI), cx, cy, R);
+                        // Recalculate properly
+                        const laR2 = lat * Math.PI / 180;
+                        const loR2 = lonDeg * Math.PI / 180 + rotation;
+                        const px = cx + R * Math.cos(laR2) * Math.sin(loR2);
+                        const py = cy - R * Math.sin(laR2);
+                        const pz = Math.cos(laR2) * Math.cos(loR2);
+                        if (pz < 0) { started = false; continue; }
+                        if (!started) { ctx.moveTo(px, py); started = true; }
+                        else ctx.lineTo(px, py);
+                    }
+                    ctx.stroke();
+                }
+
+                ctx.restore(); // end clip
+
+                // 4 ─ City dots on globe surface
+                CITIES.forEach(city => {
+                    const laR = city.lat * Math.PI / 180;
+                    const loR = city.lon * Math.PI / 180 + rotation;
+                    const px = cx + R * Math.cos(laR) * Math.sin(loR);
+                    const py = cy - R * Math.sin(laR);
+                    const pz = Math.cos(laR) * Math.cos(loR);
+                    if (pz < 0.05) return; // behind or edge of globe
+
+                    const dotR = 1.5 + pz * 2.5;
+                    const dotA = 0.3 + pz * 0.7;
+                    ctx.save();
+                    ctx.shadowColor = '#38BDF8';
+                    ctx.shadowBlur = 8 * pz;
+                    ctx.beginPath();
+                    ctx.arc(px, py, dotR, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(56,189,248,${dotA})`;
+                    ctx.fill();
+                    // White core
+                    ctx.beginPath();
+                    ctx.arc(px, py, dotR * 0.4, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(255,255,255,${dotA * 0.9})`;
+                    ctx.fill();
+                    ctx.restore();
+                });
+
+                // 5 ─ Flight arcs between city pairs
+                arcs = arcs.filter(a => !(a.phase === 'fade' && a.alpha <= 0));
+                arcs.forEach(a => {
+                    const laR1 = a.c1.lat * Math.PI / 180;
+                    const loR1 = a.c1.lon * Math.PI / 180 + rotation;
+                    const x1 = cx + R * Math.cos(laR1) * Math.sin(loR1);
+                    const y1 = cy - R * Math.sin(laR1);
+                    const z1 = Math.cos(laR1) * Math.cos(loR1);
+
+                    const laR2 = a.c2.lat * Math.PI / 180;
+                    const loR2 = a.c2.lon * Math.PI / 180 + rotation;
+                    const x2 = cx + R * Math.cos(laR2) * Math.sin(loR2);
+                    const y2 = cy - R * Math.sin(laR2);
+                    const z2 = Math.cos(laR2) * Math.cos(loR2);
+
+                    if (z1 < 0 || z2 < 0) return; // behind globe
+
+                    // Control point: pulled toward viewer (above the globe surface)
+                    const mx = (x1 + x2) / 2;
+                    const my = (y1 + y2) / 2;
+                    const dist = Math.hypot(x2 - x1, y2 - y1);
+                    const cpX = mx + (cx - mx) * 0.12;
+                    const cpY = my - dist * 0.28 - R * 0.08;
+
+                    if (a.phase === 'grow') {
+                        a.prog += dt * 0.0007;
+                        a.alpha = Math.min(a.prog * 3, 0.85);
+                        if (a.prog >= 1) a.phase = 'hold';
+                    } else if (a.phase === 'hold') {
+                        a.holdT = (a.holdT || 0) + dt;
+                        if (a.holdT > 800) a.phase = 'fade';
+                    } else {
+                        a.alpha -= dt * 0.0012;
+                    }
+
+                    const t = Math.min(a.prog, 1);
+                    const steps = Math.max(2, Math.floor(t * 50));
+
+                    // Draw arc trail
+                    ctx.save();
+                    ctx.setLineDash([5, 6]);
+                    ctx.strokeStyle = `rgba(56,189,248,${a.alpha * 0.55})`;
+                    ctx.lineWidth = 1.2;
+                    ctx.shadowColor = '#38BDF8';
+                    ctx.shadowBlur = 7;
+                    ctx.beginPath();
+                    for (let i = 0; i <= steps; i++) {
+                        const ti = (i / steps) * t;
+                        const bx = (1 - ti) * (1 - ti) * x1 + 2 * (1 - ti) * ti * cpX + ti * ti * x2;
+                        const by = (1 - ti) * (1 - ti) * y1 + 2 * (1 - ti) * ti * cpY + ti * ti * y2;
+                        i === 0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by);
+                    }
+                    ctx.stroke();
+
+                    // Travelling Airplane at arc tip
+                    if (a.phase === 'grow') {
+                        // calculate position slightly ahead/behind to get tangent slope vector
+                        const tEps = 0.01;
+                        const tNext = Math.min(t + tEps, 1);
+                        const bx = (1 - t) * (1 - t) * x1 + 2 * (1 - t) * t * cpX + t * t * x2;
+                        const by = (1 - t) * (1 - t) * y1 + 2 * (1 - t) * t * cpY + t * t * y2;
+                        const nx = (1 - tNext) * (1 - tNext) * x1 + 2 * (1 - tNext) * tNext * cpX + tNext * tNext * x2;
+                        const ny = (1 - tNext) * (1 - tNext) * y1 + 2 * (1 - tNext) * tNext * cpY + tNext * tNext * y2;
+                        const angle = Math.atan2(ny - by, nx - bx);
+
+                        ctx.save();
+                        ctx.translate(bx, by);
+                        ctx.rotate(angle);
+
+                        // Draw simple airplane polygon facing right
+                        ctx.beginPath();
+                        ctx.moveTo(8, 0);       // nose
+                        ctx.lineTo(2, 2);       // body top
+                        ctx.lineTo(-4, 7);      // wing bottom
+                        ctx.lineTo(-6, 7);      // wing trailing
+                        ctx.lineTo(-3, 1);      // body bottom
+                        ctx.lineTo(-7, 1);      // tail start
+                        ctx.lineTo(-10, 4);     // tail top
+                        ctx.lineTo(-11, 4);     // tail end
+                        ctx.lineTo(-9, 0);      // back center
+                        ctx.lineTo(-11, -4);    // tail bottom
+                        ctx.lineTo(-10, -4);    // tail bottom start
+                        ctx.lineTo(-7, -1);     // body top back
+                        ctx.lineTo(-3, -1);     // body top mid
+                        ctx.lineTo(-6, -7);     // wing top trailing
+                        ctx.lineTo(-4, -7);     // wing top leading
+                        ctx.lineTo(2, -2);      // body bottom
+                        ctx.closePath();
+
+                        ctx.fillStyle = `rgba(255,255,255,${a.alpha})`;
+                        ctx.shadowColor = '#38BDF8';
+                        ctx.shadowBlur = 10;
+                        ctx.fill();
+                        ctx.restore();
+                    }
+
+                    // On landing (first frame of 'hold' phase), spawn the popup
+                    if (a.phase === 'hold' && !a.hasPopup) {
+                        a.hasPopup = true;
+                        createPopup(a.c2);
+                    }
+
+                    ctx.restore();
+                });
+
+                // 6 ─ Update and render active Popups
+                popups = popups.filter(p => {
+                    p.t += dt; // lifecycle timer
+
+                    // If old, trigger fade out
+                    if (p.t > 4000 && p.el.style.opacity === '1') {
+                        p.el.style.opacity = '0';
+                    }
+
+                    // If fully dead, remove from DOM
+                    if (p.t > 4500) {
+                        if (p.el.parentNode) p.el.parentNode.removeChild(p.el);
+                        return false;
+                    }
+
+                    // Project 3D lat/lon to 2D screen pos
+                    const laR = p.city.lat * Math.PI / 180;
+                    const loR = p.city.lon * Math.PI / 180 + rotation;
+                    const px = cx + R * Math.cos(laR) * Math.sin(loR);
+                    const py = cy - R * Math.sin(laR);
+                    const pz = Math.cos(laR) * Math.cos(loR);
+
+                    // If behind globe, hide instantly
+                    if (pz < 0.0) {
+                        p.el.style.display = 'none';
+                    } else {
+                        p.el.style.display = 'flex';
+                        p.el.style.left = `${px}px`;
+                        p.el.style.top = `${py}px`;
+                        // Slight scale based on Z
+                        const scale = 0.85 + (pz * 0.15);
+                        p.el.style.transform = `translate(-50%, -100%) scale(${scale})`;
+                        p.el.style.zIndex = Math.floor(pz * 100);
+                    }
+
+                    return true;
+                });
+
+                requestAnimationFrame(draw);
+            }
+            requestAnimationFrame(draw);
+        })();
+    </script>
+
+</body>
+
+</html>
+if (!canvas) return;
+const ctx = canvas.getContext('2d');
+
+// ── GEO BOUNDS ──
+const GEO = { minLat: 7.0, maxLat: 36.5, minLon: 67.0, maxLon: 98.5 };
+const PAD_X = 0.09; // fractional horizontal padding
+const PAD_Y = 0.07; // fractional vertical padding
+
+function resize() {
+canvas.width = canvas.offsetWidth || window.innerWidth;
+canvas.height = canvas.offsetHeight || window.innerHeight;
+}
+resize();
+window.addEventListener('resize', resize);
+
+function geo(lat, lon) {
+const W = canvas.width, H = canvas.height;
+const padX = W * PAD_X, padY = H * PAD_Y;
+const x = padX + (lon - GEO.minLon) / (GEO.maxLon - GEO.minLon) * (W - 2 * padX);
+const y = (H - padY) - (lat - GEO.minLat) / (GEO.maxLat - GEO.minLat) * (H - 2 * padY);
+return [x, y];
+}
+
+// ── INDIA BORDER PATH (accurate, 70+ points, clockwise from Kashmir) ──
+const BORDER = [
+// Kashmir / Ladakh (NW corner)
+[35.3, 74.3], [35.0, 75.5], [34.7, 77.0], [34.4, 78.3], [34.0, 79.5],
+// Himachal / Uttarakhand border with China/Tibet
+[33.2, 81.0], [32.5, 82.5], [31.8, 84.0], [31.0, 85.5],
+// Nepal border (lat stays ~28-29)
+[30.0, 87.0], [29.5, 87.5], [29.0, 88.0], [28.5, 88.2],
+// Sikkim corridor — narrows like a neck
+[27.6, 88.5], [27.3, 88.7],
+// Bhutan border (NE bump)
+[27.0, 89.3], [26.9, 90.2], [27.0, 91.0], [27.3, 91.5],
+// Arunachal Pradesh — sweeps east then SE
+[27.5, 92.5], [28.0, 94.0], [28.2, 95.5], [28.0, 96.5], [27.5, 97.3],
+// Easternmost point, then sweep south
+[27.0, 97.4], [26.5, 97.0], [26.0, 96.0],
+// Nagaland / Manipur going south
+[25.5, 94.5], [25.0, 93.5], [24.5, 93.0], [24.0, 92.8],
+// Mizoram/Tripura (Bangladesh wraps around)
+[23.5, 92.5], [23.0, 92.3], [22.5, 92.6],
+// Tripura — dip into Bangladesh area
+[23.2, 91.5], [23.8, 91.2], [24.0, 90.5],
+// Return south along Bangladesh border
+[23.5, 90.0], [22.8, 90.2], [22.5, 89.5],
+// West Bengal coast / Sundarbans delta
+[22.0, 88.7], [21.8, 87.8],
+// Odisha coast going south
+[21.0, 86.8], [20.2, 86.2], [19.5, 85.5], [18.7, 84.5],
+// Andhra Pradesh coast
+[17.8, 83.5], [17.0, 82.5], [16.5, 82.0], [15.8, 81.0],
+[15.0, 80.4], [14.2, 80.2],
+// Tamil Nadu east coast
+[13.1, 80.3], [12.2, 80.0], [11.5, 79.8], [10.5, 79.5],
+[9.5, 78.5], [8.8, 78.0], [8.3, 77.7],
+// Kanyakumari — southernmost point
+[8.08, 77.55],
+// Kerala coast going north
+[8.3, 76.9], [9.0, 76.5], [9.8, 76.3], [10.5, 76.0], [11.2, 75.7],
+// Karnataka / Goa coast
+[12.5, 74.9], [13.5, 74.3], [14.5, 74.0], [15.4, 73.9],
+[16.5, 73.5], [17.5, 73.2],
+// Maharashtra coast (Mumbai area)
+[18.5, 73.0], [19.0, 72.9], [19.5, 72.8], [20.0, 72.8],
+// Gujarat south coast
+[20.5, 72.6], [21.0, 72.3],
+// Saurashtra / Kathiawar peninsula — protrudes westward
+[21.4, 71.5], [21.6, 70.8], [21.5, 70.0], [21.0, 69.5],
+[20.6, 68.9], [21.0, 68.5], [21.7, 68.5],
+// Northwest Gujarat tip
+[22.2, 68.7], [22.8, 69.0], [23.3, 68.7],
+// Rann of Kutch (top of Gujarat) — flat, going east
+[23.8, 68.4], [24.2, 68.8], [24.5, 69.5], [24.2, 70.5], [24.0, 71.0],
+// Rajasthan / Pakistan border going north
+[24.5, 72.0], [25.5, 71.0], [27.0, 70.5], [28.5, 70.4],
+[30.0, 70.5], [31.5, 73.5],
+// Punjab / Jammu border going back to Kashmir
+[32.2, 74.0], [33.0, 74.2], [33.8, 74.1], [34.5, 74.2], [35.3, 74.3]
+];
+
+// ── CITIES ──
+const CITIES = [
+{ name: 'Delhi', lat: 28.6, lon: 77.2 },
+{ name: 'Mumbai', lat: 19.1, lon: 72.9 },
+{ name: 'Bengaluru', lat: 12.9, lon: 77.6 },
+{ name: 'Chennai', lat: 13.1, lon: 80.3 },
+{ name: 'Kolkata', lat: 22.6, lon: 88.4 },
+{ name: 'Hyderabad', lat: 17.4, lon: 78.5 },
+{ name: 'Jaipur', lat: 26.9, lon: 75.8 },
+{ name: 'Agra', lat: 27.2, lon: 78.0 },
+{ name: 'Varanasi', lat: 25.3, lon: 83.0 },
+{ name: 'Goa', lat: 15.5, lon: 73.9 },
+{ name: 'Manali', lat: 32.2, lon: 77.2 },
+{ name: 'Srinagar', lat: 34.1, lon: 74.8 },
+{ name: 'Kochi', lat: 9.9, lon: 76.3 },
+{ name: 'Munnar', lat: 10.1, lon: 77.1 },
+{ name: 'Hampi', lat: 15.3, lon: 76.5 },
+{ name: 'Amritsar', lat: 31.6, lon: 74.9 },
+{ name: 'Lucknow', lat: 26.8, lon: 80.9 },
+{ name: 'Patna', lat: 25.6, lon: 85.1 },
+{ name: 'Bhubaneswar', lat: 20.3, lon: 85.8 },
+{ name: 'Guwahati', lat: 26.2, lon: 91.7 },
+{ name: 'Darjeeling', lat: 27.0, lon: 88.3 },
+{ name: 'Udaipur', lat: 24.6, lon: 73.7 },
+{ name: 'Jodhpur', lat: 26.3, lon: 73.0 },
+{ name: 'Pondicherry', lat: 11.9, lon: 79.8 },
+{ name: 'Leh', lat: 34.2, lon: 77.6 },
+{ name: 'Shimla', lat: 31.1, lon: 77.2 },
+{ name: 'Pushkar', lat: 26.5, lon: 74.6 },
+{ name: 'Raipur', lat: 21.3, lon: 81.6 },
+{ name: 'Vijayawada', lat: 16.5, lon: 80.6 },
+{ name: 'Mysuru', lat: 12.3, lon: 76.7 },
+];
+
+// ── STATE ──
+let markers = []; // active pulsing markers
+let arcs = []; // active flight arcs
+let particles = [];
+
+// Init floating star particles
+for (let i = 0; i < 90; i++) { particles.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.1 + 0.2, speed:
+    (Math.random() * 0.00015 + 0.00004), alpha: Math.random() * 0.35 + 0.05, }); } // ── MARKER SPAWNER ── function
+    spawnMarker() { const delay=Math.random() * 1000 + 400; setTimeout(()=> {
+    if (markers.length < 8) { const city=CITIES[Math.floor(Math.random() * CITIES.length)]; if (!markers.find(m=>
+        m.name === city.name)) {
+        markers.push({
+        name: city.name,
+        lat: city.lat, lon: city.lon,
+        phase: 'in', // in | ring | hold | out
+        alpha: 0,
+        rings: [],
+        holdT: 0,
+        });
+        }
+        }
+        spawnMarker();
+        }, delay);
+        }
+
+        // ── ARC SPAWNER ──
+        function spawnArc() {
+        const delay = Math.random() * 3500 + 1500;
+        setTimeout(() => {
+        const i = Math.floor(Math.random() * CITIES.length);
+        let j;
+        do { j = Math.floor(Math.random() * CITIES.length); } while (j === i);
+        arcs.push({
+        c1: CITIES[i], c2: CITIES[j],
+        prog: 0, alpha: 0, phase: 'grow',
+        });
+        spawnArc();
+        }, delay);
+        }
+
+        spawnMarker();
+        spawnArc();
+
+        // ── DRAW HELPERS ──
+        // Smooth cardinal spline through BORDER points
+        function drawIndia(color, lineW, blur) {
+        ctx.save();
+        ctx.strokeStyle = color;
+        ctx.lineWidth = lineW;
+        ctx.shadowColor = '#38BDF8';
+        ctx.shadowBlur = blur;
+        ctx.lineJoin = 'round';
+        ctx.lineCap = 'round';
+
+        const pts = BORDER.map(([la, lo]) => geo(la, lo));
+        const n = pts.length;
+        ctx.beginPath();
+        ctx.moveTo(pts[0][0], pts[0][1]);
+        // Cardinal spline: draw smooth curves through all points
+        for (let i = 0; i < n - 1; i++) { const p0=pts[Math.max(i - 1, 0)]; const p1=pts[i]; const p2=pts[i + 1]; const
+            p3=pts[Math.min(i + 2, n - 1)]; const tension=0.4; const cp1x=p1[0] + (p2[0] - p0[0]) * tension / 2; const
+            cp1y=p1[1] + (p2[1] - p0[1]) * tension / 2; const cp2x=p2[0] - (p3[0] - p1[0]) * tension / 2; const
+            cp2y=p2[1] - (p3[1] - p1[1]) * tension / 2; ctx.bezierCurveTo(cp1x, cp1y, cp2x, cp2y, p2[0], p2[1]); }
+            ctx.closePath(); ctx.stroke(); ctx.restore(); } // Partial bezier arc draw (0 → t) function drawArc(x1, y1,
+            x2, y2, cx, cy, t, alpha) { const steps=Math.max(2, Math.floor(t * 50)); ctx.save();
+            ctx.strokeStyle=`rgba(56,189,248,${alpha})`; ctx.lineWidth=1.2; ctx.shadowColor='#38BDF8' ;
+            ctx.shadowBlur=8; ctx.setLineDash([4, 7]); ctx.beginPath(); for (let i=0; i <=steps; i++) { const ti=(i /
+            steps) * t; const bx=(1 - ti) * (1 - ti) * x1 + 2 * (1 - ti) * ti * cx + ti * ti * x2; const by=(1 - ti) *
+            (1 - ti) * y1 + 2 * (1 - ti) * ti * cy + ti * ti * y2; i===0 ? ctx.moveTo(bx, by) : ctx.lineTo(bx, by); }
+            ctx.stroke(); ctx.restore(); } // ── MAIN LOOP ── let last=0; function draw(ts) { const dt=Math.min(ts -
+            last, 50); last=ts; const W=canvas.width, H=canvas.height; ctx.clearRect(0, 0, W, H); // 1 ─ Background
+            gradient const bg=ctx.createRadialGradient(W * 0.5, H * 0.45, 0, W * 0.5, H * 0.5, Math.max(W, H) * 0.75);
+            bg.addColorStop(0, '#0e1f45' ); bg.addColorStop(0.6, '#060e22' ); bg.addColorStop(1, '#020810' );
+            ctx.fillStyle=bg; ctx.fillRect(0, 0, W, H); // 2 ─ Lat / lon grid ctx.save();
+            ctx.strokeStyle='rgba(56,189,248,0.05)' ; ctx.lineWidth=0.6; for (let la=10; la <=35; la +=5) { const [,
+            y]=geo(la, 68); ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(W, y); ctx.stroke(); } for (let lo=70; lo
+            <=95; lo +=5) { const [x]=geo(8, lo); ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, H); ctx.stroke(); }
+            ctx.restore(); // 3 ─ India outline (3 layer glow) drawIndia('rgba(56,189,248,0.06)', 18, 40);
+            drawIndia('rgba(56,189,248,0.20)', 4, 18); drawIndia('rgba(56,189,248,0.75)', 1.5, 4); // 4 ─ Floating
+            particles particles.forEach(p=> {
+            p.y -= p.speed * dt;
+            if (p.y < 0) { p.y=1; p.x=Math.random(); } ctx.beginPath(); ctx.arc(p.x * W, p.y * H, p.r, 0, Math.PI * 2);
+                ctx.fillStyle=`rgba(200,220,255,${p.alpha})`; ctx.fill(); }); // 5 ─ Flight arcs arcs=arcs.filter(a=>
+                !(a.phase === 'fade' && a.alpha <= 0)); arcs.forEach(a=> {
+                    const [x1, y1] = geo(a.c1.lat, a.c1.lon);
+                    const [x2, y2] = geo(a.c2.lat, a.c2.lon);
+                    const cx = (x1 + x2) / 2;
+                    const cy = Math.min(y1, y2) - Math.abs(x2 - x1) * 0.38;
+                    if (a.phase === 'grow') {
+                    a.prog += dt * 0.0009;
+                    a.alpha = Math.min(a.prog * 2.5, 0.7);
+                    if (a.prog >= 1) a.phase = 'fade';
+                    } else {
+                    a.alpha -= dt * 0.001;
+                    }
+                    // Travelling dot at tip
+                    const tip = Math.min(a.prog, 1);
+                    const tx = (1 - tip) * (1 - tip) * x1 + 2 * (1 - tip) * tip * cx + tip * tip * x2;
+                    const ty = (1 - tip) * (1 - tip) * y1 + 2 * (1 - tip) * tip * cy + tip * tip * y2;
+                    drawArc(x1, y1, x2, y2, cx, cy, tip, a.alpha * 0.55);
+                    if (a.alpha > 0.05) {
+                    ctx.save();
+                    ctx.beginPath();
+                    ctx.arc(tx, ty, 3, 0, Math.PI * 2);
+                    ctx.fillStyle = `rgba(56,189,248,${a.alpha})`;
+                    ctx.shadowColor = '#38BDF8';
+                    ctx.shadowBlur = 10;
+                    ctx.fill();
+                    ctx.restore();
+                    }
+                    });
+
+                    // 6 ─ City markers
+                    markers = markers.filter(m => !(m.phase === 'out' && m.alpha <= 0)); markers.forEach(m=> {
+                        const [x, y] = geo(m.lat, m.lon);
+
+                        // Phase transitions
+                        if (m.phase === 'in') {
+                        m.alpha += dt * 0.005;
+                        if (m.alpha >= 1) {
+                        m.alpha = 1;
+                        m.phase = 'ring';
+                        m.rings = [{ r: 0, a: 1 }, { r: 0, a: 0.65 }];
+                        m.ringT = 0;
+                        }
+                        } else if (m.phase === 'ring') {
+                        m.ringT += dt;
+                        m.rings.forEach(ring => {
+                        ring.r += dt * 0.05;
+                        ring.a = Math.max(0, 1 - ring.r / 30);
+                        });
+                        if (m.ringT > 800) { m.phase = 'hold'; m.holdT = 0; }
+                        } else if (m.phase === 'hold') {
+                        m.holdT += dt;
+                        if (m.holdT > 1000 + Math.random() * 800) m.phase = 'out';
+                        } else {
+                        m.alpha -= dt * 0.0025;
+                        }
+
+                        // Draw rings
+                        if (m.phase === 'ring' || m.phase === 'hold') {
+                        m.rings.forEach(ring => {
+                        if (ring.r < 1) return; ctx.beginPath(); ctx.arc(x, y, ring.r, 0, Math.PI * 2);
+                            ctx.strokeStyle=`rgba(56,189,248,${ring.a * m.alpha * 0.9})`; ctx.lineWidth=1.4;
+                            ctx.stroke(); }); } // Draw glowing dot ctx.save(); ctx.shadowColor='#38BDF8' ;
+                            ctx.shadowBlur=14; ctx.beginPath(); ctx.arc(x, y, 4, 0, Math.PI * 2);
+                            ctx.fillStyle=`rgba(56,189,248,${m.alpha * 0.85})`; ctx.fill(); ctx.shadowBlur=0; // White
+                            inner core ctx.beginPath(); ctx.arc(x, y, 1.8, 0, Math.PI * 2);
+                            ctx.fillStyle=`rgba(255,255,255,${m.alpha})`; ctx.fill(); ctx.restore(); // City name label
+                            if (m.alpha> 0.35) {
+                            ctx.save();
+                            ctx.font = `700 9px 'Plus Jakarta Sans', sans-serif`;
+                            ctx.fillStyle = `rgba(255,255,255,${m.alpha * 0.75})`;
+                            ctx.textAlign = 'center';
+                            ctx.letterSpacing = '0.08em';
+                            ctx.fillText(m.name.toUpperCase(), x, y - 11);
+                            ctx.restore();
+                            }
+                            });
+
+                            requestAnimationFrame(draw);
+                            }
+
+                            requestAnimationFrame(draw);
+                            })();
+                            </script>
+                            </body>
+
+                            </html>

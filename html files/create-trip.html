@@ -1,0 +1,337 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WanderAI - Plan Your Indian Adventure</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+
+    <script>
+        // Apply theme immediately to prevent flashing
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+    </script>
+
+    <style>
+        :root {
+            --primary: #38BDF8;
+            --bg: #F8FAFC;
+            --text: #0F172A;
+            --glass: rgba(255, 255, 255, 0.45);
+            --border: rgba(255, 255, 255, 0.5);
+            --input-bg: rgba(255, 255, 255, 0.7);
+        }
+
+        [data-theme='dark'] {
+            --bg: #0F172A;
+            --text: #F8FAFC;
+            --glass: rgba(30, 41, 59, 0.7);
+            --border: rgba(255, 255, 255, 0.1);
+            --input-bg: rgba(15, 23, 42, 0.6);
+        }
+
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            transition: background-color 0.4s ease, color 0.4s ease;
+        }
+
+        #spotlight {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            background: radial-gradient(circle at var(--x, 50%) var(--y, 50%), rgba(56, 189, 248, 0.12) 0%, transparent 40%);
+            z-index: 1;
+        }
+
+        .iphone-glass {
+            background: var(--glass);
+            backdrop-filter: blur(15px) saturate(180%);
+            -webkit-backdrop-filter: blur(15px) saturate(180%);
+            border: 1px solid var(--border);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.04);
+        }
+
+        .input-glass {
+            background: var(--input-bg);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            transition: all 0.3s ease;
+            color: inherit;
+        }
+
+        .input-glass:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(56, 189, 248, 0.1);
+        }
+
+        .chip-btn {
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            background: var(--glass);
+            border: 1px solid var(--border);
+            color: inherit;
+            opacity: 0.6;
+        }
+
+        .chip-btn.active {
+            background: var(--primary);
+            color: white;
+            opacity: 1;
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.2);
+            border-color: var(--primary);
+        }
+
+        .spinner {
+            display: none;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            animation: spin 1s ease-in-out infinite;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .iphone-btn {
+            background: var(--glass);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            transition: all 0.3s ease;
+        }
+
+        /* Micro-interactions: Fade Up Animation */
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-fade-up {
+            opacity: 0;
+            animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+        }
+
+        .stagger-1 {
+            animation-delay: 100ms;
+        }
+
+        .stagger-2 {
+            animation-delay: 200ms;
+        }
+
+        .stagger-3 {
+            animation-delay: 300ms;
+        }
+    </style>
+</head>
+
+<body onmousemove="updateSpotlight(event)">
+    <div id="spotlight"></div>
+
+    <nav class="fixed top-0 w-full z-[100] px-6 py-8">
+        <div
+            class="max-w-7xl mx-auto flex justify-between items-center iphone-glass px-6 py-3 rounded-[32px] shadow-sm text-inherit">
+            <a href="index.html" class="flex items-center gap-3 text-2xl font-black">
+                <i class="fa-solid fa-mountain-sun text-sky-400"></i>
+                <span>Wander<span class="text-sky-400">AI</span></span>
+            </a>
+            <div class="flex items-center gap-4">
+                <button onclick="toggleTheme()"
+                    class="w-10 h-10 iphone-btn rounded-xl flex items-center justify-center text-inherit">
+                    <i id="themeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <div class="hidden md:flex gap-6 items-center">
+                    <a href="index.html"
+                        class="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">Home</a>
+                    <a href="saved-trips.html"
+                        class="text-sm font-bold opacity-60 hover:opacity-100 transition-opacity">Saved</a>
+                </div>
+            </div>
+        </div>
+    </nav>
+
+    <main class="pt-40 pb-20 px-6 max-w-4xl mx-auto relative z-10">
+        <div class="mb-10 text-center animate-fade-up stagger-1">
+            <h2 class="text-4xl font-black tracking-tight">Generate Your Itinerary</h2>
+            <p class="text-slate-500 font-bold mt-2 italic">Optimized for Indian Rupee (₹) and local travel routes.</p>
+        </div>
+
+        <div class="iphone-glass p-8 md:p-12 rounded-[48px] space-y-12 animate-fade-up stagger-2">
+
+            <div class="space-y-4">
+                <label class="block text-xs font-black opacity-40 uppercase tracking-[0.2em]">Where do you want to
+                    go?</label>
+                <input type="text" id="destInput" placeholder="e.g. Udaipur, Leh, or Munnar"
+                    class="input-glass w-full p-5 font-bold outline-none shadow-sm">
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-12">
+                <div class="space-y-4">
+                    <label class="block text-xs font-black opacity-40 uppercase tracking-[0.2em]">Traveler Type</label>
+                    <div class="grid grid-cols-2 gap-2" id="travelerGroup">
+                        <button onclick="toggleActive(this, 'travelerGroup')"
+                            class="chip-btn py-3 rounded-2xl text-xs font-bold active">Solo</button>
+                        <button onclick="toggleActive(this, 'travelerGroup')"
+                            class="chip-btn py-3 rounded-2xl text-xs font-bold">Couple</button>
+                        <button onclick="toggleActive(this, 'travelerGroup')"
+                            class="chip-btn py-3 rounded-2xl text-xs font-bold">Family</button>
+                        <button onclick="toggleActive(this, 'travelerGroup')"
+                            class="chip-btn py-3 rounded-2xl text-xs font-bold">Friends</button>
+                    </div>
+                </div>
+
+                <div class="space-y-4">
+                    <label class="block text-xs font-black opacity-40 uppercase tracking-[0.2em]">Budget Level (INR
+                        ₹)</label>
+                    <div class="grid grid-cols-3 gap-2" id="budgetGroup">
+                        <button onclick="toggleActive(this, 'budgetGroup')"
+                            class="chip-btn py-3 rounded-2xl text-[10px] font-black uppercase">Economy</button>
+                        <button onclick="toggleActive(this, 'budgetGroup')"
+                            class="chip-btn py-3 rounded-2xl text-[10px] font-black uppercase active">Standard</button>
+                        <button onclick="toggleActive(this, 'budgetGroup')"
+                            class="chip-btn py-3 rounded-2xl text-[10px] font-black uppercase">Luxury</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <label class="block text-xs font-black opacity-40 uppercase tracking-[0.2em]">Main Interests</label>
+                <div class="flex flex-wrap gap-3" id="interestGroup">
+                    <button onclick="this.classList.toggle('active')"
+                        class="chip-btn px-6 py-3 rounded-2xl text-xs font-bold active">Culture</button>
+                    <button onclick="this.classList.toggle('active')"
+                        class="chip-btn px-6 py-3 rounded-2xl text-xs font-bold">Adventure</button>
+                    <button onclick="this.classList.toggle('active')"
+                        class="chip-btn px-6 py-3 rounded-2xl text-xs font-bold">Foodie</button>
+                    <button onclick="this.classList.toggle('active')"
+                        class="chip-btn px-6 py-3 rounded-2xl text-xs font-bold">Relaxation</button>
+                </div>
+            </div>
+
+            <button id="submitBtn" onclick="generateItinerary()"
+                class="w-full bg-slate-900 dark:bg-sky-500 text-white py-6 rounded-3xl font-black text-sm uppercase tracking-[0.3em] shadow-2xl transition-all duration-300 transform active:scale-[0.98] flex items-center justify-center gap-4">
+                <span id="btnText">Create My Indian Trip</span>
+                <div id="btnSpinner" class="spinner"></div>
+            </button>
+        </div>
+    </main>
+
+    <script>
+        function updateSpotlight(e) {
+            document.body.style.setProperty('--x', e.clientX + 'px');
+            document.body.style.setProperty('--y', e.clientY + 'px');
+        }
+
+        function toggleActive(element, groupID) {
+            const buttons = document.querySelectorAll(`#${groupID} button`);
+            buttons.forEach(btn => btn.classList.remove('active'));
+            element.classList.add('active');
+        }
+
+        async function generateItinerary() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
+
+            // Get active values from the glassmorphism UI buttons
+            const budgetBtn = document.querySelector('#budgetGroup button.active');
+            const interestBtns = document.querySelectorAll('#interestGroup button.active');
+
+            // Convert budget label to a Number so MongoDB accepts it later during save
+            let numericBudget = 15000; // default Standard
+            if (budgetBtn) {
+                const bText = budgetBtn.innerText.toLowerCase();
+                if (bText.includes('economy')) numericBudget = 5000;
+                else if (bText.includes('luxury')) numericBudget = 50000;
+            }
+
+            // Collect data from your inputs
+            const tripData = {
+                destination: document.getElementById('destInput').value || 'Anywhere',
+                days: 7, // User didn't provide weeks/days in this UI, so defaulting to 7
+                budget: numericBudget,
+                vibe: Array.from(interestBtns).map(b => b.innerText).join(', ') || 'Culture'
+            };
+
+            // UI Loading State
+            btn.disabled = true;
+            btnText.innerText = "Consulting AI...";
+            spinner.style.display = "block";
+
+            try {
+                // Use the generate-preview endpoint which returns data without saving it
+                const response = await fetch('http://localhost:5000/api/trips/generate-preview', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(tripData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // SUCCESS: Store the generated data in sessionStorage
+                    sessionStorage.setItem('tempTrip', JSON.stringify(result.data));
+                    btnText.innerText = "Redirecting...";
+                    window.location.href = `itinerary.html`;
+                } else {
+                    alert("Error: " + result.message);
+                    resetButton();
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+                alert("Server connection failed.");
+                resetButton();
+            }
+        }
+
+        function resetButton() {
+            const btn = document.getElementById('submitBtn');
+            const btnText = document.getElementById('btnText');
+            const spinner = document.getElementById('btnSpinner');
+            btn.disabled = false;
+            btnText.innerText = "Create My Indian Trip";
+            spinner.style.display = "none";
+        }
+
+        function toggleTheme() {
+            const current = document.documentElement.getAttribute('data-theme');
+            const target = current === 'light' ? 'dark' : 'light';
+            document.documentElement.setAttribute('data-theme', target);
+            localStorage.setItem('theme', target);
+            updateThemeIcon(target);
+        }
+
+        function updateThemeIcon(theme) {
+            const icon = document.getElementById('themeIcon');
+            if (icon) {
+                icon.className = theme === 'dark' ? 'fa-solid fa-sun text-yellow-400' : 'fa-solid fa-moon text-slate-500';
+            }
+        }
+        updateThemeIcon(localStorage.getItem('theme') || 'light');
+    </script>
+</body>
+
+</html>
